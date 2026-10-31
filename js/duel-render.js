@@ -65,8 +65,10 @@ export function renderDuel() {
     ? 'デュエル終了'
     : app.busy ? '処理中…'
       : d.turn === 'opp' ? '相手のターン'
-        : app.sel?.action ? '光っているゾーンを選択'
-          : 'カードをタップして選択';
+        : app.sel?.action === 'special'
+          ? (app.sel.release ? '空きモンスターゾーンを選択' : 'リリースするモンスターを選択')
+          : app.sel?.action ? '光っているゾーンを選択'
+            : 'カードをタップして選択';
 }
 
 function renderNames(d) {
@@ -118,6 +120,8 @@ function zoneHTML(side, kind, idx, entry) {
   if (state.valid) cls.push('valid');
   if (state.targetable) cls.push('targetable');
   if (state.selected) cls.push('selected');
+  if (state.releaseable) cls.push('releaseable');
+  if (state.releasePicked) cls.push('release-picked');
   if (entry) cls.push('hoverable');
 
   const emptyLabel = kind === 'monster' ? ['MON', '+'] : kind === 'spell' ? ['S/T', '+'] : kind === 'field' ? ['FIELD', 'F'] : ['EX', 'EX'];
@@ -135,7 +139,9 @@ function zoneState(side, kind, idx, entry) {
   let valid = false;
   let targetable = false;
   let selected = false;
-  if (!d) return { valid, targetable, selected };
+  let releaseable = false;
+  let releasePicked = false;
+  if (!d) return { valid, targetable, selected, releaseable, releasePicked };
 
   valid = canDropOn(side, kind, idx);
   if (app.sel?.type === 'field' && app.sel.attackReady) {
@@ -146,7 +152,15 @@ function zoneState(side, kind, idx, entry) {
     if (kind === 'emz') selected = !!entry && entry.owner === 'you' && app.sel.kind === 'emz' && app.sel.idx === idx;
     else selected = side === 'you' && app.sel.kind === kind && app.sel.idx === idx;
   }
-  return { valid, targetable, selected };
+  if (app.sel?.type === 'hand' && app.sel.action === 'special') {
+    const ownMonster = side === 'you' && entry && !entry.faceDown
+      && (kind === 'monster' || (kind === 'emz' && entry.owner === 'you'));
+    const picked = app.sel.release
+      && app.sel.release.kind === kind && app.sel.release.idx === idx;
+    if (picked) releasePicked = true;
+    else if (ownMonster) releaseable = true;
+  }
+  return { valid, targetable, selected, releaseable, releasePicked };
 }
 
 export function canDropOn(side, kind, idx) {
@@ -156,7 +170,12 @@ export function canDropOn(side, kind, idx) {
   if (!empty) return false;
   if (app.sel.type === 'extra') return kind === 'emz';
   if (app.sel.type !== 'hand' || !app.sel.action) return false;
-  if (app.sel.action === 'summon' || app.sel.action === 'set') return kind === 'monster' && app.sel.card.kind === 'monster';
+  if (app.sel.action === 'special') {
+    return kind === 'monster' && app.sel.card.kind === 'monster' && !!app.sel.release;
+  }
+  if (app.sel.action === 'summon' || app.sel.action === 'set') {
+    return kind === 'monster' && app.sel.card.kind === 'monster' && !app.sel.card.specialSummon;
+  }
   if (app.sel.action === 'setSpell') return kind === 'spell';
   return false;
 }
@@ -273,12 +292,31 @@ function renderTray(d) {
 
   if (sel.type === 'hand') {
     const c = sel.card;
+    if (sel.action === 'special') {
+      const rel = sel.release;
+      const releaseEntry = rel ? d.entryAt('you', rel.kind, rel.idx) : null;
+      const label = rel ? '空きモンスターゾーンを選択' : 'リリースする自分のモンスターを選択';
+      const note = releaseEntry
+        ? `リリース：${esc(releaseEntry.card.name)}（DEF ${d.defOf('you', releaseEntry)}）`
+        : 'モンスター1体をリリース';
+      tray.innerHTML = `${chipHTML(c)}<span class="tray-hint"><i></i>${label}</span>
+        ${btn('キャンセル', 'cancel')}<span class="tray-spacer"></span><span class="tray-turn">${note}</span>`;
+      return;
+    }
     if (sel.action) {
       const label = sel.action === 'setSpell' ? '魔法・罠ゾーンを選択' : 'モンスターゾーンを選択';
       tray.innerHTML = `${chipHTML(c)}<span class="tray-hint"><i></i>${label}</span><span class="tray-spacer"></span>${btn('キャンセル', 'cancel')}`;
       return;
     }
     if (c.kind === 'monster') {
+      if (c.specialSummon) {
+        const check = d.canSpecialSummon('you', c.uid);
+        const note = check.ok ? `リリース${check.need}体 → 特殊召喚` : check.reason;
+        tray.innerHTML = `${chipHTML(c)}
+          ${btn('特殊召喚', 'special', 'primary', !check.ok)}${btn('詳細', 'detail')}
+          <span class="tray-spacer"></span><span class="tray-turn">${esc(note)}</span>`;
+        return;
+      }
       const need = d.tributesNeeded(c.level);
       const enough = d.ownMonsters('you').length >= need;
       const dis = d.flags.summoned || !enough;

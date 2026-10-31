@@ -106,6 +106,22 @@ export const CARDS = {
     text: '召喚時、自分のLPを300回復する。',
     effect: { trigger: 'summon', ops: [{ t: 'heal', n: 300 }] },
   },
+  vd11: {
+    id: 'vd11', name: 'u成.VD11', kind: 'monster', attribute: 'light', race: '機械',
+    level: 6, atk: 2011, def: 297, rarity: 'UR', glyph: '⌬',
+    text: 'このカードは自分フィールドのモンスター1体をリリースした場合のみ特殊召喚できる。'
+      + 'このカードの攻撃時のみ、このカードのATKはリリースしたモンスターのDEF分下がる。'
+      + 'このカードは戦闘で破壊されず、自分が受けるダメージは代わりに相手が受ける。',
+    specialSummon: { release: 1 },
+    battle: { indestructible: true, redirectDamage: true },
+    attackPenalty: 'releasedDef',
+  },
+  genbu: {
+    id: 'genbu', name: 'ドラシェル玄武', kind: 'monster', attribute: 'water', race: '爬虫類',
+    level: 4, atk: 0, def: 2000, rarity: 'R', glyph: '⬢',
+    text: '巨大な甲羅で攻撃を受け止める守りの要。ATK 0／DEF 2000の壁モンスター。',
+    effect: null,
+  },
 
   /* ---------------- extra deck ---------------- */
   ex_arcadia: {
@@ -213,9 +229,9 @@ export const DECKS = {
     desc: '高火力ドラゴンとバーンで押し切る。攻め切るための赤いデッキ。',
     main: {
       dragonia: 2, ignis: 3, luna: 2, guardian: 2, fenrir: 2, levia: 2, nox: 2,
-      seraph: 1, valkyrie: 3, assassin: 2, crow: 2, imp: 1,
+      seraph: 1, valkyrie: 3, assassin: 2, crow: 2, vd11: 1, genbu: 1,
       breath: 3, guidance: 2, wave: 1, scorched: 2, thunder: 2, greed: 1,
-      blast: 2, pit: 1, barrier: 1, counter: 1,
+      blast: 2, pit: 1, counter: 1,
     },
     extra: ['ex_arcadia', 'ex_gigant', 'ex_hades'],
   },
@@ -223,8 +239,8 @@ export const DECKS = {
     id: 'abyss', name: '深淵の章', short: '深淵', accent: '#b06bff',
     desc: '除去と回復で盤面を支配。罠と冥府騎士で相手の攻撃をいなす。',
     main: {
-      luna: 3, nox: 3, guardian: 3, fenrir: 2, seraph: 2, assassin: 3, hound: 3,
-      spirit: 2, dragonia: 1, levia: 2,
+      luna: 3, nox: 3, guardian: 3, fenrir: 2, seraph: 2, assassin: 3, hound: 2,
+      spirit: 2, dragonia: 1, levia: 2, genbu: 1,
       guidance: 3, wave: 2, breath: 2, spring: 2, greed: 2,
       pit: 2, barrier: 2, counter: 1,
     },
@@ -234,8 +250,8 @@ export const DECKS = {
     id: 'gear', name: '機巧の章', short: '機巧', accent: '#4de3ff',
     desc: '低コストを並べてEX召喚。連続攻撃とドローで畳みかける。',
     main: {
-      crow: 3, valkyrie: 3, fenrir: 3, ignis: 3, guardian: 2, golem: 2, levia: 2,
-      dragonia: 1, imp: 3, hound: 2,
+      crow: 3, valkyrie: 3, fenrir: 3, ignis: 3, guardian: 2, golem: 1, levia: 2,
+      dragonia: 1, imp: 3, hound: 2, vd11: 1,
       scorched: 2, thunder: 3, breath: 2, guidance: 2, fortify: 2,
       blast: 2, mirror: 1, counter: 2,
     },

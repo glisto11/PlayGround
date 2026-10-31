@@ -117,6 +117,17 @@ export class Duel {
     return Math.max(0, (entry.card.def || 0) + (entry.defMod || 0) + this.fieldBonus(side).def);
   }
 
+  /* ATK actually used when this monster declares an attack (VD11 penalty applies only then). */
+  atkForAttack(side, entry) {
+    if (!entry) return 0;
+    const penalty = entry.card.attackPenalty === 'releasedDef' ? (entry.releasedDef || 0) : 0;
+    return Math.max(0, this.atkOf(side, entry) - penalty);
+  }
+
+  hasDamageRedirect(side) {
+    return this.ownMonsters(side).some(m => !m.entry.faceDown && m.entry.card.battle?.redirectDamage);
+  }
+
   tributesNeeded(level) {
     if (level >= 7) return 2;
     if (level >= 5) return 1;
@@ -134,9 +145,15 @@ export class Duel {
   damage(side, amount, ev = [], reason = 'damage') {
     const n = Math.max(0, Math.round(amount));
     if (!n || this.winner) return;
-    this.lp[side] = Math.max(0, this.lp[side] - n);
-    ev.push({ type: 'damage', side, amount: n, lp: this.lp[side], reason });
-    this.log(`${this.names[side]} に ${n} ダメージ（LP ${this.lp[side]}）`, 'damage');
+    let target = side;
+    if (this.hasDamageRedirect(side)) {
+      target = other(side);
+      ev.push({ type: 'redirect', from: side, to: target, amount: n, reason });
+      this.log(`${this.names[side]}へのダメージを${this.names[target]}へ転嫁（${n}）`, 'trap');
+    }
+    this.lp[target] = Math.max(0, this.lp[target] - n);
+    ev.push({ type: 'damage', side: target, amount: n, lp: this.lp[target], reason, redirected: target !== side });
+    this.log(`${this.names[target]} に ${n} ダメージ（LP ${this.lp[target]}）`, 'damage');
     this.checkWin(ev);
   }
 
@@ -264,6 +281,7 @@ export class Duel {
     const card = this.hand[side][handIdx];
     if (card.kind !== 'monster') throw new DuelError('モンスターカードではありません');
     if (card.extra) throw new DuelError('EXモンスターはEX召喚でのみ出せます');
+    if (card.specialSummon) throw new DuelError('このカードはリリースによる特殊召喚でのみ出せます');
     if (zoneIdx < 0 || zoneIdx > 4) throw new DuelError('ゾーン指定が不正です');
     if (this.field[side].monster[zoneIdx]) throw new DuelError('そのモンスターゾーンは使用中です');
 
@@ -294,6 +312,63 @@ export class Duel {
     this.log(mode === 'set' ? `${card.name} をセット（守備）` : `${card.name} を召喚（ATK ${this.atkOf(side, entry)}）`, 'summon');
 
     if (mode !== 'set' && card.effect?.trigger === 'summon') this.resolveOps(side, card.effect.ops, ev, { entry });
+    this.checkWin(ev);
+    return ev;
+  }
+
+  /* Special summon that requires releasing monsters from your own field. */
+  canSpecialSummon(side, uid, releaseRef = null) {
+    if (this.winner) return { ok: false, reason: 'デュエルは終了しています' };
+    if (this.turn !== side) return { ok: false, reason: '自分のターンではありません' };
+    const card = this.hand[side].find(c => c.uid === uid);
+    if (!card) return { ok: false, reason: 'そのカードは手札にありません' };
+    if (card.kind !== 'monster' || !card.specialSummon) return { ok: false, reason: '特殊召喚できるカードではありません' };
+    const need = card.specialSummon.release || 1;
+    const own = this.ownMonsters(side);
+    if (own.length < need) return { ok: false, reason: `リリースするモンスターが${need}体必要です` };
+    if (!this.field[side].monster.some(z => !z)) return { ok: false, reason: '空きモンスターゾーンがありません' };
+    if (releaseRef) {
+      const entry = this.entryAt(side, releaseRef.kind, releaseRef.idx);
+      if (!entry) return { ok: false, reason: 'リリースするモンスターがいません' };
+    }
+    return { ok: true, card, need, own };
+  }
+
+  specialSummon(side, uid, zoneIdx, releaseRef = null, ev = []) {
+    const check = this.canSpecialSummon(side, uid, releaseRef);
+    if (!check.ok) throw new DuelError(check.reason);
+    if (zoneIdx < 0 || zoneIdx > 4) throw new DuelError('ゾーン指定が不正です');
+    if (this.field[side].monster[zoneIdx]) throw new DuelError('そのモンスターゾーンは使用中です');
+
+    const card = check.card;
+    const handIdx = this.hand[side].findIndex(c => c.uid === uid);
+    const own = check.own;
+    let release = null;
+    if (releaseRef) {
+      release = own.find(m => m.kind === releaseRef.kind && m.idx === releaseRef.idx) || null;
+    }
+    if (!release) {
+      release = own.slice().sort((a, b) => this.defOf(side, a.entry) - this.defOf(side, b.entry))[0];
+    }
+    if (!release) throw new DuelError('リリースするモンスターがいません');
+
+    const releasedDef = this.defOf(side, release.entry);
+    const releasedName = release.entry.card.name;
+    this.destroyEntry(side, release.kind, release.idx, ev, 'release');
+    this.log(`${releasedName} をリリース（DEF ${releasedDef}）`, 'tribute');
+
+    this.hand[side].splice(handIdx, 1);
+    const entry = {
+      card, position: 'atk', faceDown: false, atkMod: 0, defMod: 0,
+      attacked: false, summonedTurn: this.turnNo, owner: side, releasedDef,
+    };
+    this.field[side].monster[zoneIdx] = entry;
+    ev.push({
+      type: 'specialSummon', side, card, uid: card.uid, kind: 'monster', idx: zoneIdx,
+      mode: 'atk', releasedDef, releasedName,
+    });
+    this.log(`特殊召喚！ ${card.name}（リリース：${releasedName} DEF ${releasedDef}）`, 'summon');
+    if (card.effect?.trigger === 'summon') this.resolveOps(side, card.effect.ops, ev, { entry });
     this.checkWin(ev);
     return ev;
   }
@@ -459,11 +534,14 @@ export class Duel {
     entry.attacked = true;
 
     if (target.kind === 'direct') {
-      const atk = this.atkOf(side, entry);
+      const baseAtk = this.atkOf(side, entry);
+      const atk = this.atkForAttack(side, entry);
+      const atkPenalty = baseAtk - atk;
+      if (atkPenalty > 0) this.log(`${entry.card.name} の攻撃時ATKはリリースしたDEF分下がり ${atk}`, 'info');
       this.log(`${entry.card.name} の直接攻撃！ ${atk}ダメージ`, 'attack');
       ev.push({
         type: 'attack', side, kind, idx, attackerUid: entry.card.uid,
-        target: { kind: 'direct' }, direct: true, atk, damage: atk, trap: !!trap,
+        target: { kind: 'direct' }, direct: true, atk, baseAtk, atkPenalty, damage: atk, trap: !!trap,
       });
       this.damage(enemy, atk, ev, 'battle');
       this.afterAttack(side, kind, idx, entry, ev);
@@ -478,7 +556,9 @@ export class Duel {
       this.log(`伏せていた ${dentry.card.name} を公開`, 'reveal');
     }
 
-    const atk = this.atkOf(side, entry);
+    const baseAtk = this.atkOf(side, entry);
+    const atk = this.atkForAttack(side, entry);
+    const atkPenalty = baseAtk - atk;
     const targetAtk = this.atkOf(enemy, dentry);
     const targetDef = this.defOf(enemy, dentry);
     const defPosition = dentry.position === 'def';
@@ -486,28 +566,33 @@ export class Duel {
     let damage = 0;
     let destroyTarget = false;
     let destroyAttacker = false;
+    let damageSide = null;
 
     if (defPosition) {
       if (atk > targetDef) { destroyTarget = true; damage = 0; }
-      else if (atk < targetDef) { destroyAttacker = true; damage = targetDef - atk; }
+      else if (atk < targetDef) { destroyAttacker = true; damage = targetDef - atk; damageSide = side; }
     } else {
       const diff = atk - targetAtk;
-      if (diff > 0) { destroyTarget = true; damage = diff; }
-      else if (diff < 0) { destroyAttacker = true; damage = -diff; }
+      if (diff > 0) { destroyTarget = true; damage = diff; damageSide = enemy; }
+      else if (diff < 0) { destroyAttacker = true; damage = -diff; damageSide = side; }
       else { destroyAttacker = true; destroyTarget = true; damage = 0; }
     }
 
+    const attackerImmune = !!entry.card.battle?.indestructible;
+    const defenderImmune = !!dentry.card.battle?.indestructible;
+    if (attackerImmune) destroyAttacker = false;
+    if (defenderImmune) destroyTarget = false;
+
     ev.push({
       type: 'attack', side, kind, idx, attackerUid: entry.card.uid, target,
-      direct: false, atk, targetAtk, targetDef, defPosition,
-      damage, destroyAttacker, destroyTarget, trap: !!trap,
+      direct: false, atk, baseAtk, atkPenalty, targetAtk, targetDef, defPosition,
+      damage, destroyAttacker, destroyTarget, attackerImmune, defenderImmune, trap: !!trap,
       targetUid: dentry.card.uid,
     });
 
-    if (damage > 0) {
-      if (destroyAttacker) this.damage(side, damage, ev, 'battle');
-      else this.damage(enemy, damage, ev, 'battle');
-    }
+    if (atkPenalty > 0) this.log(`${entry.card.name} の攻撃時ATKはリリースしたDEF分下がり ${atk}`, 'info');
+
+    if (damage > 0 && damageSide) this.damage(damageSide, damage, ev, 'battle');
 
     if (destroyTarget) {
       this.log(`${dentry.card.name} を破壊`, 'destroy');
@@ -516,6 +601,12 @@ export class Duel {
     if (destroyAttacker) {
       this.log(`${entry.card.name} が戦闘で破壊された`, 'destroy');
       this.destroyEntry(side, kind, idx, ev, 'battle');
+    }
+    if (attackerImmune && (dentry.faceDown ? false : (defPosition ? atk < targetDef : atk <= targetAtk))) {
+      this.log(`${entry.card.name} は戦闘で破壊されない`, 'buff');
+    }
+    if (defenderImmune && (defPosition ? atk > targetDef : atk >= targetAtk)) {
+      this.log(`${dentry.card.name} は戦闘で破壊されない`, 'buff');
     }
 
     if (destroyTarget || destroyAttacker) {

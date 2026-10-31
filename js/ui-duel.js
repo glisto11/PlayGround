@@ -100,6 +100,25 @@ function handleZone(side, kind, idx) {
     }
   }
 
+  if (app.sel?.type === 'hand' && app.sel.action === 'special') {
+    const ownMonster = side === 'you' && entry && !entry.faceDown
+      && (kind === 'monster' || (kind === 'emz' && entry.owner === 'you'));
+    if (ownMonster) {
+      app.sel.release = { kind, idx };
+      sfx('select');
+      toast(`${entry.card.name} をリリース（DEF ${d.defOf('you', entry)}）`, 'gold');
+      renderDuel();
+      return;
+    }
+    if (side === 'you' && kind === 'monster' && !entry) {
+      if (!app.sel.release) { toast('先にリリースするモンスターを選択', 'bad'); return; }
+      doDrop('monster', idx);
+      return;
+    }
+    toast('リリースするモンスター、または空きモンスターゾーンを選択', 'bad');
+    return;
+  }
+
   if (side === 'you' && app.sel && canDropOn('you', kind, idx)) {
     doDrop(kind, idx);
     return;
@@ -136,6 +155,14 @@ function doDrop(kind, idx) {
     return;
   }
   if (sel.type !== 'hand') return;
+  if (sel.action === 'special') {
+    if (!sel.release) return;
+    perform({
+      type: 'special', uid: sel.uid, zone: idx,
+      releaseKind: sel.release.kind, releaseIdx: sel.release.idx,
+    });
+    return;
+  }
   if (sel.card.kind === 'monster') {
     perform({ type: 'summon', uid: sel.uid, zone: idx, mode: sel.action === 'set' ? 'set' : 'atk' });
   } else {
@@ -175,6 +202,17 @@ function onTrayClick(e) {
       break;
     case 'summon':
       if (sel?.type === 'hand') { sel.action = 'summon'; renderDuel(); }
+      break;
+    case 'special':
+      if (sel?.type === 'hand' && sel.card.specialSummon) {
+        const check = d.canSpecialSummon('you', sel.uid);
+        if (!check.ok) { toast(check.reason, 'bad'); break; }
+        sel.action = 'special';
+        sel.release = null;
+        sfx('select');
+        renderDuel();
+        toast('リリースする自分のモンスターを選択', 'gold');
+      }
       break;
     case 'set':
       if (sel?.type === 'hand') {
@@ -235,6 +273,9 @@ function runEngine(action, side) {
   const d = app.duel;
   switch (action.type) {
     case 'summon': return d.normalSummon(side, action.uid, action.zone, action.mode);
+    case 'special': return d.specialSummon(side, action.uid, action.zone, {
+      kind: action.releaseKind, idx: action.releaseIdx,
+    });
     case 'extra': return d.extraSummon(side, action.uid, action.slot);
     case 'activateSpell': return d.activateHandSpell(side, action.uid);
     case 'activateSet': return d.activateSetSpell(side, action.zone);

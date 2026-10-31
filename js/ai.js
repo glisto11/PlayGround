@@ -27,12 +27,32 @@ export function aiChoose(duel, side = 'opp') {
     }
   }
 
-  /* 2. Normal summon — pick the strongest affordable monster */
+  /* 2. Release-based special summon (u成.VD11) */
+  const specialCard = hand.find(c => c.kind === 'monster' && c.specialSummon);
+  if (specialCard) {
+    const zone = emptyZone(duel.field[side].monster);
+    const check = duel.canSpecialSummon(side, specialCard.uid);
+    if (zone >= 0 && check.ok) {
+      const release = own
+        .slice()
+        .sort((a, b) => duel.defOf(side, a.entry) - duel.defOf(side, b.entry))[0];
+      const releasedDef = release ? duel.defOf(side, release.entry) : 0;
+      const worthIt = release && releasedDef <= 1200 && (own.length >= 2 || releasedDef <= 800);
+      if (worthIt) {
+        return {
+          type: 'special', uid: specialCard.uid, zone,
+          releaseKind: release.kind, releaseIdx: release.idx,
+        };
+      }
+    }
+  }
+
+  /* 3. Normal summon — pick the strongest affordable monster */
   if (!duel.flags.summoned) {
     const zone = emptyZone(duel.field[side].monster);
     if (zone >= 0) {
       const candidates = hand
-        .filter(c => c.kind === 'monster' && !c.extra)
+        .filter(c => c.kind === 'monster' && !c.extra && !c.specialSummon)
         .map(c => {
           const need = duel.tributesNeeded(c.level);
           const tributes = own
@@ -53,20 +73,20 @@ export function aiChoose(duel, side = 'opp') {
     }
   }
 
-  /* 3. Field spell if none active */
+  /* 4. Field spell if none active */
   if (!duel.field[side].field) {
     const fieldSpell = handOfKind(duel, side, 'spell').find(c => c.spellType === 'field');
     if (fieldSpell) return { type: 'activateSpell', uid: fieldSpell.uid };
   }
 
-  /* 4. Activate a useful normal spell */
+  /* 5. Activate a useful normal spell */
   const spells = handOfKind(duel, side, 'spell').filter(c => c.spellType !== 'field');
   const sorted = spells.slice().sort((a, b) => spellScore(duel, side, b) - spellScore(duel, side, a));
   for (const spell of sorted) {
     if (spellScore(duel, side, spell) > 0) return { type: 'activateSpell', uid: spell.uid };
   }
 
-  /* 5. Set one trap if we have none face-down */
+  /* 6. Set one trap if we have none face-down */
   const hasTrapSet = duel.field[side].spell.some(e => e && e.faceDown && e.card.kind === 'trap');
   if (!hasTrapSet) {
     const trap = handOfKind(duel, side, 'trap')[0];
@@ -74,16 +94,16 @@ export function aiChoose(duel, side = 'opp') {
     if (trap && zone >= 0) return { type: 'set', uid: trap.uid, zone };
   }
 
-  /* 6. Reveal a set spell */
+  /* 7. Reveal a set spell */
   const setSpell = duel.field[side].spell
     .map((e, i) => ({ e, i }))
     .find(x => x.e && x.e.faceDown && x.e.card.kind === 'spell');
   if (setSpell) return { type: 'activateSet', zone: setSpell.i };
 
-  /* 7. Attacks */
+  /* 8. Attacks */
   const attackers = own
     .filter(m => !m.entry.faceDown && m.entry.position === 'atk' && !m.entry.attacked)
-    .sort((a, b) => duel.atkOf(side, b.entry) - duel.atkOf(side, a.entry));
+    .sort((a, b) => duel.atkForAttack(side, b.entry) - duel.atkForAttack(side, a.entry));
 
   if (attackers.length) {
     if (!enemyMons.length) {
@@ -91,7 +111,9 @@ export function aiChoose(duel, side = 'opp') {
     }
     let best = null;
     for (const a of attackers) {
-      const atk = duel.atkOf(side, a.entry);
+      const atk = duel.atkForAttack(side, a.entry);
+      const immune = !!a.entry.card.battle?.indestructible;
+      const redirect = !!a.entry.card.battle?.redirectDamage;
       for (const t of enemyMons) {
         const tAtk = duel.atkOf(enemy, t.entry);
         const tDef = duel.defOf(enemy, t.entry);
@@ -99,13 +121,16 @@ export function aiChoose(duel, side = 'opp') {
         let damage = 0;
         if (t.entry.faceDown || t.entry.position === 'def') {
           if (atk > tDef) score = 520 + atk * 0.1;
+          else if (immune) { score = 300 + (tDef - atk) * 0.5; damage = tDef - atk; }
           else score = -200 - (tDef - atk);
         } else {
           const diff = atk - tAtk;
           if (diff > 0) { score = 700 + diff; damage = diff; }
-          else if (diff === 0) score = atk >= 2500 ? 300 : -300;
+          else if (diff === 0) score = immune ? 450 : (atk >= 2500 ? 300 : -300);
+          else if (immune) { score = 300 + (-diff) * 0.5; damage = -diff; }
           else score = -400 + diff;
         }
+        if (redirect && damage > 0) score += 60;
         if (a.entry.card.effect?.trigger === 'attack') score += 180;
         if (score > (best?.score ?? 0)) best = { a, t, score, damage };
       }
