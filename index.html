@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060d">
+<title>DUEL 24 — LP0 ONLINE ROOM LIST</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070b16'/%3E%3Ctext x='32' y='43' font-family='monospace' font-size='26' font-weight='bold' text-anchor='middle' fill='%234de3ff'%3ED24%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="bg-fx" aria-hidden="true">
+  <div class="grid"></div>
+  <div class="glow glow-a"></div>
+  <div class="glow glow-b"></div>
+  <div class="scan"></div>
+  <div class="particles" id="particles"></div>
+</div>
+
+<!-- ================= LOBBY ================= -->
+<section id="lobby" class="screen active">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">D<span>24</span></span>
+      <div class="brand-text"><b>DUEL 24</b><small>LP0 ONLINE ROOM LIST</small></div>
+    </div>
+    <div class="topbar-right">
+      <div class="online-pill"><i></i><b id="onlineCount">0</b><span>オンライン</span></div>
+      <button class="profile-btn" id="nameBtn" title="プレイヤー名を変更">
+        <span class="avatar" id="myAvatar">?</span>
+        <span class="profile-name" id="myName">DUELIST</span>
+        <span class="edit-dot">✎</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="lobby-grid">
+    <section class="hero">
+      <p class="eyebrow"><span class="eyebrow-dot"></span>AUTO CREATE ROOM / AUTO JOIN / 24 ZONES</p>
+      <h1>相手のLPを<br><em>0</em>にしろ。</h1>
+      <p class="hero-sub">カード画像は0枚。フィールドは24ゾーン。起動した瞬間に自分のルームが立ち、あなたは必ずそこへ参加している。オンラインのルームリストから挑むもよし、ソロでCPUを相手にするもよし。</p>
+      <div class="hero-actions">
+        <button class="primary-btn" id="soloBtn">
+          <span class="btn-glyph">⚔</span>
+          <span class="btn-lines"><b>ソロでデュエル</b><small>VS CPU / すぐ開始</small></span>
+        </button>
+        <button class="secondary-btn" id="myRoomBtn">
+          <span class="btn-glyph">◉</span>
+          <span class="btn-lines"><b>自分のルームへ</b><small>起動時に自動参加済み</small></span>
+        </button>
+      </div>
+
+      <div class="specs">
+        <div class="spec"><b>24</b><span>ZONES</span><i>2人 × 11 + EX 2</i></div>
+        <div class="spec"><b>0</b><span>LPで勝利</span><i>相手のLPを0に</i></div>
+        <div class="spec"><b>0</b><span>枚の画像</span><i>全てテキストカード</i></div>
+      </div>
+
+      <div class="deck-picker">
+        <div class="deck-picker-head">
+          <span>使用デッキ</span>
+          <span id="deckCount" class="muted">40枚 + EX 3</span>
+        </div>
+        <div class="deck-options" id="deckOptions"></div>
+        <p class="deck-desc" id="deckDesc"></p>
+      </div>
+    </section>
+
+    <aside class="side-col">
+      <section class="panel my-room-panel" id="myRoomPanel">
+        <div class="panel-head">
+          <h2>あなたのルーム</h2>
+          <span class="live-tag"><i></i>参加中</span>
+        </div>
+        <div class="my-room-top">
+          <div>
+            <span class="room-code" id="myRoomCode">D24-0000</span>
+            <p class="room-sub" id="myRoomSub">起動時に作成されました</p>
+          </div>
+          <span class="zone-badge">24Z</span>
+        </div>
+        <div class="my-room-body" id="myRoomBody"></div>
+        <button class="primary-btn wide" id="enterRoomBtn">ルームに入る</button>
+        <p class="tiny" id="autoJoinNote">起動と同時に自動作成・自動参加されています。</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>戦績</h2>
+          <span class="muted" id="recordSub">SOLO + ONLINE</span>
+        </div>
+        <div class="record" id="recordBody"></div>
+      </section>
+
+      <section class="panel hint-panel">
+        <div class="panel-head"><h2>ルール</h2><span class="muted">QUICK</span></div>
+        <ul class="rule-list">
+          <li><b>LP 0</b> で敗北。相手のLPを0にすれば勝ち。</li>
+          <li>フィールドは <b>24ゾーン</b>。モンスター5・魔法罠5・フィールド1を各自、中央にEXゾーン2。</li>
+          <li>上級モンスターは生贄が必要。EXモンスターはモンスター2体を生贄にEXゾーンへ。</li>
+          <li>伏せた罠は相手の攻撃時に<b>自動発動</b>する。</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="panel rooms-panel">
+      <div class="panel-head">
+        <h2>オンラインルームリスト</h2>
+        <span class="muted live-meta"><i class="pulse-dot"></i>自動更新 · <b id="roomCount">0</b> 室</span>
+      </div>
+      <div class="room-table-head">
+        <span>ルーム / ホスト</span>
+        <span>モード</span>
+        <span>LP</span>
+        <span>ゾーン</span>
+        <span>人数</span>
+        <span>状態</span>
+        <span></span>
+      </div>
+      <div id="roomList" class="room-list" aria-live="polite"></div>
+    </section>
+  </main>
+</section>
+
+<!-- ================= ROOM DETAIL ================= -->
+<section id="roomScreen" class="screen">
+  <header class="topbar">
+    <button class="icon-btn back-btn" id="roomBackBtn" aria-label="ロビーへ戻る">←</button>
+    <div class="brand small">
+      <span class="brand-mark">D<span>24</span></span>
+      <div class="brand-text"><b>ROOM</b><small id="roomHeadCode">D24-0000</small></div>
+    </div>
+    <div class="topbar-right">
+      <div class="online-pill"><i></i><b id="roomOnlineCount">0</b><span>オンライン</span></div>
+    </div>
+  </header>
+  <main class="room-detail" id="roomDetailBody"></main>
+</section>
+
+<!-- ================= DUEL ================= -->
+<section id="duelScreen" class="screen duel-screen">
+  <header class="duel-top">
+    <button class="icon-btn" id="leaveDuelBtn" aria-label="デュエルから退出">←</button>
+    <div class="duel-brand">DUEL<span>24</span><small id="duelModeLabel">SOLO</small></div>
+    <div class="turn-pill" id="turnPill"><i></i><span>YOUR TURN</span><b id="turnNo">T1</b></div>
+    <div class="duel-room-label" id="duelRoomLabel">ROOM —</div>
+    <div class="duel-top-actions">
+      <button class="icon-btn" id="logBtn" title="デュエルログ">LOG</button>
+      <button class="icon-btn" id="soundBtn" title="サウンド">♪</button>
+    </div>
+  </header>
+
+  <main class="duel-main">
+    <div class="board-frame">
+      <div class="board" id="board">
+
+        <section class="side opp" id="oppSide">
+          <div class="strip">
+            <div class="duelist">
+              <span class="avatar" id="oppAvatar">?</span>
+              <div class="duelist-text"><b id="oppName">OPPONENT</b><small id="oppTag">ONLINE DUELIST</small></div>
+            </div>
+            <div class="lp-block" id="oppLpBlock" data-side="opp">
+              <div class="lp-top"><span>LIFE POINT</span><b class="lp-value" id="oppLp">8000</b></div>
+              <div class="lp-bar"><i id="oppLpFill"></i></div>
+            </div>
+            <div class="piles" id="oppPiles"></div>
+          </div>
+          <div class="side-field">
+            <div class="field-rail" id="oppFieldSlot"></div>
+            <div class="rows" id="oppRows"></div>
+          </div>
+        </section>
+
+        <div class="center-strip">
+          <span class="center-line"></span>
+          <div class="emz-area" id="emzArea"></div>
+          <div class="center-badge"><b>24</b><span>ZONE FIELD</span></div>
+          <span class="center-line"></span>
+        </div>
+
+        <section class="side you" id="youSide">
+          <div class="side-field">
+            <div class="field-rail" id="youFieldSlot"></div>
+            <div class="rows" id="youRows"></div>
+          </div>
+          <div class="strip">
+            <div class="duelist">
+              <span class="avatar you-avatar" id="youAvatar">?</span>
+              <div class="duelist-text"><b id="youName">YOU</b><small id="youTag">CHALLENGER</small></div>
+            </div>
+            <div class="lp-block" id="youLpBlock" data-side="you">
+              <div class="lp-top"><span>LIFE POINT</span><b class="lp-value" id="youLp">8000</b></div>
+              <div class="lp-bar"><i id="youLpFill"></i></div>
+            </div>
+            <div class="piles" id="youPiles"></div>
+          </div>
+        </section>
+
+      </div>
+      <div class="log-strip" id="logStrip"></div>
+    </div>
+  </main>
+
+  <footer class="duel-bottom">
+    <div class="action-tray" id="actionTray"></div>
+    <div class="hand-zone">
+      <div class="hand-meta">
+        <span class="hand-count">HAND <b id="handCount">0</b></span>
+        <button class="ex-btn" id="extraBtn">EX召喚 <b id="exCount">3</b></button>
+        <span class="hand-tip" id="handTip">カードをタップして選択</span>
+      </div>
+      <div class="hand" id="hand"></div>
+    </div>
+  </footer>
+</section>
+
+<div id="modalRoot" class="modal-root" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <button class="modal-x" data-close-modal aria-label="閉じる">×</button>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="turnBanner" class="turn-banner" hidden><span></span><b></b></div>
+<div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

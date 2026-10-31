@@ -1,18 +1,73 @@
-# PlayGround
+# DUEL 24 — LP0 ONLINE ROOM LIST
 
-<!-- omgithub:readme:start -->
-## 🚀 Build, play, and remix with OMGithub
+遊戯王風のルールを、カード画像なしのテキストカードだけで楽しむブラウザ対戦ゲームです。
+起動すると自分のルームが自動で作成され、自動参加した状態から始まります。
 
-**Created using [OMGithub.com](https://omgithub.com).**
+- 相手の **LP を 0** にすれば勝利
+- フィールドは **24 ゾーン**
+  - モンスター 5 + 魔法・罠 5 + フィールド 1（各プレイヤー）
+  - 共有 EX ゾーン 2
+- カード画像は **0 枚**。すべて CSS と文字で描画
+- カードは常時アニメーション（浮遊・光沢・召喚・攻撃・破壊演出）
+- オンラインルームリストから対戦、または CPU とのソロ対戦
+- デスクトップ / スマートフォン対応
 
-[![OMGithub](https://img.shields.io/badge/OMGithub-Open%20project-orange?style=for-the-badge)](https://omgithub.com/glisto11/PlayGround)
-[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github&style=for-the-badge)](https://github.com/glisto11/PlayGround)
+## 起動方法
 
-- 🎮 [Open the project](https://omgithub.com/glisto11/PlayGround).
-- ✨ [Remix this project](https://omgithub.com/?remix=glisto11%2FPlayGround).
-- 💻 [Explore the source](https://github.com/glisto11/PlayGround).
-- 🛠️ [Check build runs](https://github.com/glisto11/PlayGround/actions).
-- 🐛 [Report an issue](https://github.com/glisto11/PlayGround/issues).
-- 👤 [Explore the creator's projects](https://omgithub.com/glisto11).
-- 🌍 [Create with OMGithub](https://omgithub.com).
-<!-- omgithub:readme:end -->
+静的サイトです。任意の静的サーバーでリポジトリ直下を配信してください。
+
+```bash
+# このリポジトリに含まれる起動スクリプトを使う場合
+RUNTIME_DIR=/path/to/runtime PORT=3000 ./start.sh
+```
+
+または、単純に `index.html` をブラウザで開いても遊べます。
+
+## 遊び方
+
+1. ロビーで使用デッキを選ぶ（3種類 / 各 40枚 + EX 3枚）
+2. 「ソロでデュエル」で CPU 戦、またはルームリストから相手のルームに参加
+3. 手札をタップして「召喚」「セット」「発動」を選択
+4. 自分のモンスターを選択して「攻撃」→ 相手モンスター、または相手 LP をタップ
+5. 相手の LP を 0 にすれば勝利
+
+### ルール
+
+- 通常召喚は 1 ターンに 1 回
+- レベル 5・6 のモンスターは生贄 1 体、レベル 7 以上は生贄 2 体
+- EX モンスターは自分のモンスター 2 体を生贄に、空いている EX ゾーンへ EX 召喚
+- 伏せた罠は相手の攻撃宣言時に自動発動
+- 山札が 0 枚の状態でドローすると敗北
+- 相手 LP が 0 になった時点で勝利
+
+## ルームについて
+
+起動時に `D24-XXXX` 形式の自分のルームが作成され、常に参加状態になります。
+ルームリストは一定間隔で更新され、ホスト・モード・LP・人数・状態が変わります。
+自分のルームには挑戦者が入室することがあり、そのままオンライン形式のデュエルを開始できます。
+
+> このプロジェクトは静的サイトとして動作するため、ルームリストと対戦相手はブラウザ内のライブシミュレーションです。プロフィール、戦績、ルームコードは `localStorage` に保存されます。
+
+## ファイル構成
+
+```text
+index.html          画面シェル（ロビー / ルーム / デュエル）
+css/app.css         ビジュアル、24ゾーン、カード、アニメーション、レスポンシブ
+js/cards.js         カード定義と3デッキ
+js/engine.js        デュエルルールエンジン
+js/ai.js            CPU AI
+js/rooms.js         ルームリスト、自動ルーム、プロフィール保存
+js/fx.js            カード移動・攻撃・破壊演出、効果音
+js/ui-core.js       共通UI、モーダル、トースト
+js/ui-lobby.js      ロビー、プロフィール、ルーム詳細
+js/duel-render.js   盤面描画、手札、ターン表示
+js/ui-duel.js       デュエル操作、AI進行、結果画面
+js/main.js          初期化
+```
+
+## 技術
+
+- HTML / CSS / Vanilla JavaScript（ES Modules）
+- ビルド不要
+- 外部画像・外部フォント・ゲームエンジン不使用
+- 効果音は Web Audio API で合成
