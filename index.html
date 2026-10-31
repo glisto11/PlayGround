@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070616" />
+  <meta name="description" content="DUEL 24 ZONES — 画像を使わない、24ゾーンのオンラインカードデュエル。" />
+  <title>DUEL 24 ZONES — NO IMAGE CARD BATTLE</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070616'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='30' font-weight='bold' text-anchor='middle' fill='%2358f5ff'%3E24%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles-ui.css" />
+</head>
+<body>
+  <div id="bg" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="grid-floor"></span>
+    <span class="scan"></span>
+  </div>
+
+  <div id="app">
+    <header id="topbar">
+      <button class="brand" data-act="openDrawer" aria-label="ルーム一覧を開く">
+        <span class="brand-mark"><b>24</b><i>Z</i></span>
+        <span class="brand-text">
+          <span class="brand-title">DUEL <em>24</em> ZONES</span>
+          <span class="brand-sub">NO IMAGE CARD BATTLE · 12 + 12 ZONES</span>
+        </span>
+      </button>
+
+      <div class="top-right">
+        <button id="roomChip" class="room-chip" data-act="openDrawer" aria-label="ルーム情報">
+          <span class="dot"></span>
+          <span id="roomChipText">ROOM ----</span>
+          <span id="roomChipMode" class="chip-mode">CPU戦</span>
+        </button>
+        <button class="icon-btn sound-btn" data-act="toggleSound" id="soundBtn" aria-label="サウンド切替">SOUND ON</button>
+        <button class="icon-btn" data-act="openDrawer" aria-label="ルーム一覧">ROOMS <span id="roomCount" class="count">0</span></button>
+      </div>
+    </header>
+
+    <main id="table">
+      <section id="oppSide" class="side opponent" aria-label="相手フィールド"></section>
+      <div id="centerBar" class="center-bar"></div>
+      <section id="mySide" class="side self" aria-label="自分フィールド"></section>
+      <section id="handArea" class="hand-area" aria-label="自分の手札"></section>
+    </main>
+
+    <div id="drawerScrim" class="drawer-scrim" data-act="closeDrawer"></div>
+    <aside id="drawer" class="drawer" aria-label="ルーム一覧とデュエルログ">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">ONLINE ROOM LIST</p>
+          <h2>ルーム &amp; ログ</h2>
+        </div>
+        <button class="x-btn" data-act="closeDrawer" aria-label="閉じる">×</button>
+      </div>
+      <div id="drawerBody" class="drawer-body"></div>
+    </aside>
+  </div>
+
+  <div id="overlay" class="overlay" aria-live="polite"></div>
+  <div id="modal" class="modal" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status"></div>
+  <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+
+  <noscript>
+    <div class="noscript">このデュエルには JavaScript が必要です。</div>
+  </noscript>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
