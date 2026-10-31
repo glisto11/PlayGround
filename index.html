@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05070d">
+  <meta name="description" content="DUEL 24 — 24ゾーン、LPゼロで決着するオンラインルームリスト・カードデュエル。">
+  <title>DUEL 24 — ONLINE ROOM LIST</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="world" aria-hidden="true">
+    <canvas id="stars"></canvas>
+    <div class="grid-floor"></div>
+    <div class="aurora aurora-a"></div>
+    <div class="aurora aurora-b"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div id="app">
+    <header class="topbar">
+      <div class="brand" id="brand">
+        <span class="brand-mark"><b>24</b><i></i></span>
+        <span class="brand-copy">
+          <strong>DUEL<span>24</span></strong>
+          <small>ONLINE ROOM LIST / ZERO POINT</small>
+        </span>
+      </div>
+      <div class="topbar-right">
+        <div class="online-pill"><span class="live-dot"></span> ONLINE <b id="online-count">1,284</b></div>
+        <div class="season-pill">SEASON 01 <b>ZERO</b></div>
+        <button class="solo-btn" id="solo-duel" aria-label="ソロモードでCPUと対戦"><b>SOLO</b><span>CPU</span></button>
+        <button class="icon-btn rooms-toggle" id="rooms-toggle" aria-label="ルームリストを開く">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+        </button>
+        <button class="icon-btn" id="sound-toggle" aria-label="サウンド切替" aria-pressed="true">
+          <svg class="ico-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 8c1.2 1.1 2 2.4 2 4s-.8 2.9-2 4M19.8 5.2C21.8 7 23 9.3 23 12s-1.2 5-3.2 6.8"/></svg>
+        </button>
+        <button class="icon-btn" id="help-toggle" aria-label="遊び方">?</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" id="sidebar" aria-label="オンラインルームリスト">
+        <div class="sidebar-head">
+          <div>
+            <h2>ROOM LIST</h2>
+            <p>24 ZONE ONLINE DUEL</p>
+          </div>
+          <button class="ghost-btn" id="refresh-rooms">REFRESH</button>
+          <button class="icon-btn sidebar-close" id="sidebar-close" aria-label="ルームリストを閉じる">×</button>
+        </div>
+
+        <section class="my-room" id="my-room-card" aria-label="自分のルーム"></section>
+
+        <section class="solo-card" aria-label="ソロモード">
+          <div class="solo-head"><span>SOLO DUEL</span><b>CPU</b></div>
+          <p>ルームリストなしで、CPUとすぐに対戦。</p>
+          <div class="solo-levels">
+            <button data-action="solo" data-difficulty="easy">EASY</button>
+            <button data-action="solo" data-difficulty="normal" class="active">NORMAL</button>
+            <button data-action="solo" data-difficulty="hard">HARD</button>
+          </div>
+        </section>
+
+        <div class="room-tools">
+          <div class="filter-tabs" role="tablist" aria-label="ルームフィルター">
+            <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">ALL</button>
+            <button class="filter-tab" data-filter="waiting" role="tab" aria-selected="false">待機中</button>
+            <button class="filter-tab" data-filter="dueling" role="tab" aria-selected="false">対戦中</button>
+          </div>
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+            <input id="room-search" type="search" placeholder="ROOM SEARCH" autocomplete="off" aria-label="ルーム検索">
+          </label>
+        </div>
+
+        <div class="room-list" id="room-list"></div>
+
+        <footer class="sidebar-foot">
+          <div class="profile" id="profile"></div>
+          <div class="sidebar-note"><span>●</span> 起動時に自分のルームを自動生成 / 自動参加</div>
+        </footer>
+      </aside>
+
+      <main class="main">
+        <section class="arena" id="arena" aria-label="デュエルアリーナ">
+          <div class="hud enemy-hud" id="enemy-hud"></div>
+
+          <div class="board-shell">
+            <div class="board-head">
+              <span class="board-tag"><i></i> 24 ZONE ARENA</span>
+              <span class="turn-chip" id="turn-chip">YOUR TURN</span>
+              <span class="mode-chip" id="mode-chip">ONLINE</span>
+              <span class="board-tag right">LP ZERO = WIN</span>
+            </div>
+            <div class="board" id="board" aria-label="24ゾーンボード"></div>
+            <div class="board-foot">
+              <span id="phase-hint">手札を選び、光るゾーンへ配置</span>
+              <button class="log-btn" id="log-toggle">COMBAT LOG</button>
+            </div>
+          </div>
+
+          <div class="hud player-hud" id="player-hud"></div>
+
+          <div class="hand-dock">
+            <div class="energy-wrap" id="energy-wrap"></div>
+            <div class="hand" id="hand" aria-label="手札"></div>
+            <div class="actions">
+              <button class="all-attack" id="all-attack">ALL<br><b>ATTACK</b></button>
+              <button class="end-turn" id="end-turn"><span>TURN</span><b>END</b></button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="log-panel" id="log-panel" aria-label="戦闘ログ">
+          <div class="log-head"><span>COMBAT LOG</span><button id="log-close" aria-label="ログを閉じる">×</button></div>
+          <div class="log-body" id="log-body"></div>
+        </aside>
+      </main>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <div class="overlay result-overlay" id="result-overlay" hidden>
+      <div class="result-card">
+        <div class="result-kicker" id="result-kicker">DUEL COMPLETE</div>
+        <h2 class="result-title" id="result-title">ZERO</h2>
+        <p class="result-sub" id="result-sub">YOU WIN</p>
+        <div class="result-lp"><span>ENEMY LP</span><b id="result-lp">0</b></div>
+        <div class="result-stats" id="result-stats"></div>
+        <div class="result-actions">
+          <button class="primary-btn" id="rematch">REMATCH</button>
+          <button class="ghost-btn" id="result-rooms">ROOM LIST</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay help-overlay" id="help-overlay" hidden>
+      <div class="help-card">
+        <button class="icon-btn help-close" id="help-close" aria-label="閉じる">×</button>
+        <div class="help-kicker">HOW TO DUEL</div>
+        <h2>LPを<span>ゼロ</span>にせよ。</h2>
+        <div class="help-grid">
+          <article><b>01</b><h3>24 ZONES</h3><p>4列 × 3段 × 2サイド。自分の12ゾーンへカードを配置。前衛・中衛・後衛で守りが変わる。</p></article>
+          <article><b>02</b><h3>FRONT LINE</h3><p>攻撃できるのは前衛だけ。中衛・後衛は1ターンに1マス前後へ移動でき、前衛に出たカードは即攻撃可能。</p></article>
+          <article><b>03</b><h3>BREAKTHROUGH</h3><p>同じ列の最も前の敵を攻撃。敵を破壊した余剰ダメージは、そのまま相手LPへ貫通する。</p></article>
+          <article><b>04</b><h3>ENERGY</h3><p>毎ターン最大ENERGYが1増え、全回復。カードのコストを払って展開しよう。最大10。</p></article>
+          <article><b>05</b><h3>ZERO</h3><p>相手LPを0にすれば勝利。デッキ切れは150×回数の疲労ダメージ。LP 0の瞬間、デュエルは終わる。</p></article>
+          <article><b>06</b><h3>CONTROL</h3><p>手札をタップ→ゾーンをタップで召喚。自分のカードをタップ→敵カード/LPで攻撃、隣接ゾーンで移動。</p></article>
+        </div>
+        <div class="help-foot"><span>24 ZONES</span><span>LP 3000</span><span>CARDS ALWAYS MOVE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
