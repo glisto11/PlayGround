@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070f" />
+  <meta name="description" content="NEXUS DUEL 24 — an online room card duel on a 24-zone field. Your room is created and joined automatically at startup." />
+  <title>NEXUS DUEL 24 — Online Room Duel</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23050b16'/%3E%3Cpath d='M14 48V16h9l18 21V16h9v32h-9L23 27v21z' fill='%2343f0ff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <!-- ══════════ BOOT / AUTO ROOM CREATION ══════════ -->
+  <div class="boot" id="boot" role="status" aria-live="polite">
+    <div class="boot-panel">
+      <div class="boot-mark">NEXUS<span>DUEL</span><em>24</em></div>
+      <div class="boot-tag">ONLINE ROOM DUEL PROTOCOL</div>
+      <div class="boot-log" id="bootLog"></div>
+      <div class="boot-track"><i id="bootBar"></i></div>
+      <div class="boot-foot"><span id="bootPct">00%</span><span>CLICK TO SKIP</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ APP ══════════ -->
+  <div class="app" id="app" aria-hidden="true">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <div class="brand-text"><b>NEXUS DUEL</b><small>24-ZONE ONLINE</small></div>
+        <div class="brand-badge">24</div>
+      </div>
+
+      <div class="room-status">
+        <span class="live-dot"></span>
+        <span class="room-label">YOUR ROOM</span>
+        <b id="roomCode">#24-0000</b>
+        <span class="room-state" id="roomState">AUTO-JOINED</span>
+      </div>
+
+      <div class="top-actions">
+        <div class="net" title="Room latency"><span id="pingVal">12</span><small>ms</small></div>
+        <button class="icon-btn" id="rulesBtn" aria-label="How to play" title="How to play">?</button>
+        <button class="icon-btn" id="soundBtn" aria-label="Toggle sound" title="Toggle sound">♪</button>
+        <button class="icon-btn mobile-only" id="roomsBtn" aria-controls="roomsPanel">ROOMS</button>
+        <button class="icon-btn mobile-only" id="logBtn" aria-controls="feedPanel">LOG</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <!-- ONLINE ROOM LIST -->
+      <aside class="panel rooms-panel" id="roomsPanel" aria-label="Online rooms">
+        <div class="panel-head">
+          <span>ONLINE ROOMS</span>
+          <button class="tiny-btn" id="refreshRooms" title="Refresh room list">SYNC</button>
+        </div>
+        <div class="panel-sub"><span>オンラインルーム</span><span id="roomCount">4 LIVE</span></div>
+        <div class="rooms" id="roomList"></div>
+        <div class="room-note"><span class="live-dot"></span>起動時に自室を生成し、自動参加しています。</div>
+        <div class="net-card">
+          <div><span>HOST</span><b>YOU</b></div>
+          <div><span>MODE</span><b>RANKED</b></div>
+          <div><span>FIELD</span><b>24 ZONES</b></div>
+        </div>
+      </aside>
+
+      <!-- ARENA -->
+      <main class="arena-wrap">
+        <div class="arena" id="arena">
+          <!-- OPPONENT -->
+          <section class="side enemy-side" aria-label="Opponent field">
+            <div class="duelist enemy" id="enemyDuelist">
+              <div class="avatar enemy-avatar"><span>K</span></div>
+              <div class="duelist-info">
+                <div class="duelist-top"><b>KAI</b><span>LV.24</span><em>ENEMY</em></div>
+                <div class="lp-bar enemy-lp" id="enemyLPBar"><i></i><span id="enemyLP">8000</span><small>LP</small></div>
+              </div>
+              <div class="hand-dots"><i></i><i></i><i></i></div>
+            </div>
+            <div class="zone-row back-row" id="enemyBack" data-side="enemy" data-row="back"></div>
+            <div class="zone-row front-row" id="enemyFront" data-side="enemy" data-row="front"></div>
+          </section>
+
+          <div class="midline">
+            <div class="turn-chip" id="turnChip"><span class="turn-dot"></span><b id="turnText">YOUR TURN</b><small id="turnNo">TURN 01</small></div>
+            <div class="field-tag"><span></span>24-ZONE FIELD<span></span></div>
+            <div class="ap-wrap"><span>AP</span><div class="ap-pips" id="apPips"></div></div>
+          </div>
+
+          <!-- PLAYER -->
+          <section class="side player-side" aria-label="Your field">
+            <div class="zone-row front-row" id="playerFront" data-side="player" data-row="front"></div>
+            <div class="zone-row back-row" id="playerBack" data-side="player" data-row="back"></div>
+            <div class="duelist player" id="playerDuelist">
+              <div class="avatar player-avatar"><span>Y</span></div>
+              <div class="duelist-info">
+                <div class="duelist-top"><b>YOU</b><span>LV.24</span><em>HOST</em></div>
+                <div class="lp-bar player-lp" id="playerLPBar"><i></i><span id="playerLP">8000</span><small>LP</small></div>
+              </div>
+              <div class="hand-dots"><i></i><i></i><i></i></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="controls">
+          <div class="hint" id="hint">TAP A CARD → TAP A ZONE</div>
+          <button class="ghost-btn small" id="rematchMini" hidden>REMATCH</button>
+          <button class="action-btn" id="endTurnBtn">END TURN</button>
+        </div>
+
+        <div class="mobile-feed" id="mobileFeed" aria-label="Live duel feed">
+          <div class="mf-head"><span class="live-dot"></span><span>DUEL FEED</span><em>LIVE</em></div>
+          <div class="mf-rows" id="mfRows"></div>
+        </div>
+      </main>
+
+      <!-- DUEL LOG -->
+      <aside class="panel feed-panel" id="feedPanel" aria-label="Duel log">
+        <div class="panel-head"><span>DUEL LOG</span><span class="live-dot"></span></div>
+        <div class="feed" id="feed"></div>
+        <div class="hand-info">
+          <div><span>HAND</span><b id="handCount">0</b></div>
+          <div><span>DECK</span><b id="deckCount">0</b></div>
+          <div><span>AP</span><b id="apCount">3</b></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- HAND -->
+    <footer class="handbar">
+      <div class="deck-zone">
+        <div class="deck-stack" id="deckStack"><i></i><i></i><i></i><span id="deckNum">24</span></div>
+        <small>DECK</small>
+      </div>
+      <div class="hand-scroll"><div class="hand" id="hand"></div></div>
+      <div class="hand-side">
+        <div class="turn-mini">TURN <b id="turnNumMini">01</b></div>
+        <button class="action-btn small" id="endTurnBtn2">END TURN</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ══════════ RESULT ══════════ -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="result-card">
+      <div class="result-kicker">DUEL COMPLETE</div>
+      <h1 id="resultTitle">VICTORY</h1>
+      <p id="resultSub">KAI // LP 0</p>
+      <div class="result-stats" id="resultStats"></div>
+      <div class="result-actions">
+        <button class="action-btn" id="rematchBtn">REMATCH</button>
+        <button class="ghost-btn" id="closeResult">STAY IN ROOM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ RULES ══════════ -->
+  <div class="overlay" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="rules-card">
+      <div class="result-kicker">NEXUS DUEL 24</div>
+      <h2 id="rulesTitle">HOW TO DUEL</h2>
+      <ul>
+        <li><b>ROOM</b><span>Your private room is created and joined automatically at startup.</span></li>
+        <li><b>24 ZONES</b><span>12 zones each: 6 unit zones in front, 6 tech zones in back.</span></li>
+        <li><b>AP</b><span>You get 3 action points per turn. Summon, cast, and attack each cost 1 AP.</span></li>
+        <li><b>COMBAT</b><span>Tap one of your units, then an enemy unit. Higher ATK destroys the other and deals the difference.</span></li>
+        <li><b>WIN</b><span>Clear the enemy front row, then attack directly until their LP hits 0.</span></li>
+      </ul>
+      <button class="action-btn" id="closeRules">ENTER THE DUEL</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
