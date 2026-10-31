@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#04060e">
+<meta name="description" content="24 Zone — a fast neon number puzzle. Combine four tiles with + − × ÷ to reach exactly 24.">
+<title>24 ZONE — Four numbers. One target.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070c18'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='900' fill='%2363f3ff' text-anchor='middle'%3E24%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="fx" class="fx" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+
+<main class="app" id="app">
+  <header class="hud">
+    <a class="brand" href="#" id="brandLink" aria-label="24 Zone home">24<span>ZONE</span></a>
+    <div class="stats">
+      <div class="stat"><span>ZONE</span><strong id="hudZone">01</strong></div>
+      <div class="stat"><span>SCORE</span><strong id="hudScore">0</strong></div>
+      <div class="stat time"><span>TIME</span><strong id="hudTime">1:30</strong></div>
+    </div>
+    <button id="soundBtn" class="icon-btn" aria-label="Toggle sound" aria-pressed="true">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9.5h3.2L11.5 6v12L7.2 14.5H4z" fill="currentColor" stroke="none"/>
+        <path class="wave" d="M14.8 9.2a4.2 4.2 0 0 1 0 5.6"/>
+        <path class="wave" d="M17.4 6.8a7.7 7.7 0 0 1 0 10.4"/>
+        <path class="slash" d="M4.5 4.5l15 15"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="timebar" id="timebar" aria-hidden="true"><div class="timefill" id="timeFill"></div></div>
+
+  <section class="stage" id="stage">
+    <div class="zone-line">
+      <span class="zone-label" id="zoneLabel">ZONE 01 <em>CALIBRATE</em></span>
+      <div class="dots" id="dots" aria-label="Puzzles cleared in this zone"></div>
+      <span class="streak" id="streakChip" hidden>STREAK ×1</span>
+    </div>
+
+    <div class="target" aria-label="Target: 24">
+      <span>TARGET</span>
+      <strong>24</strong>
+    </div>
+
+    <div class="board" id="board" aria-label="Number tiles"></div>
+    <p class="expression" id="expression">Tap two tiles to combine</p>
+
+    <div class="operators" id="operators" aria-label="Operators">
+      <button class="op" data-op="+" aria-label="Add">+</button>
+      <button class="op" data-op="−" aria-label="Subtract">−</button>
+      <button class="op" data-op="×" aria-label="Multiply">×</button>
+      <button class="op" data-op="÷" aria-label="Divide">÷</button>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="undoBtn" type="button">↺ Undo</button>
+      <button class="action" id="resetBtn" type="button">⟲ Reset</button>
+      <button class="action" id="hintBtn" type="button">✦ Hint</button>
+    </div>
+
+    <p class="message" id="message" role="status" aria-live="polite">Make exactly 24.</p>
+  </section>
+
+  <p class="footnote">Use every tile once · fractions allowed · reach exactly 24</p>
+</main>
+
+<div class="overlay" id="startOverlay">
+  <div class="panel hero">
+    <p class="eyebrow">A NUMBER PUZZLE IN THE NEON</p>
+    <h1 class="logo"><span class="l24">24</span><span class="lzone">ZONE</span></h1>
+    <p class="tagline">Four numbers. One target.<br><span>Every move counts.</span></p>
+    <div class="demo" aria-hidden="true">
+      <span class="mini">6</span><span class="mop">×</span><span class="mini">4</span><span class="mop">=</span><span class="mini is-win">24</span>
+    </div>
+    <button class="primary" id="playBtn" type="button">ENTER THE ZONE <span>→</span></button>
+    <p class="best-line" id="bestLine">BEST 0 PTS · ZONE 01</p>
+    <details class="howto">
+      <summary>How to play</summary>
+      <p>Tap two number tiles, then choose an operator. The result replaces them. Keep combining until one tile remains — it must equal <strong>24</strong>. You must use all four tiles.</p>
+      <p>Clear three puzzles to open the next zone. Every solve adds time. Hints and resets cost you.</p>
+    </details>
+  </div>
+</div>
+
+<div class="overlay hidden" id="clearOverlay">
+  <div class="panel result">
+    <p class="eyebrow">ZONE SECURED</p>
+    <h2 class="result-title">ZONE <span id="clearZone">01</span> CLEARED</h2>
+    <div class="bonus">+<span id="clearBonus">200</span> BONUS</div>
+    <div class="result-stats">
+      <div><span>SCORE</span><strong id="clearScore">0</strong></div>
+      <div><span>TIME LEFT</span><strong id="clearTime">0:00</strong></div>
+      <div><span>BEST</span><strong id="clearBest">0</strong></div>
+    </div>
+    <button class="primary" id="nextBtn" type="button">ENTER ZONE <span id="nextZone">02</span> <span>→</span></button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overOverlay">
+  <div class="panel result">
+    <p class="eyebrow">SIGNAL LOST</p>
+    <h2 class="result-title">ZONE COLLAPSED</h2>
+    <p class="result-sub" id="overReason">Time ran out in Zone 1.</p>
+    <div class="score-big" id="finalScore">0</div>
+    <p class="best-line" id="overBest">BEST 0 PTS · ZONE 01</p>
+    <button class="primary" id="retryBtn" type="button">TRY AGAIN <span>→</span></button>
+    <button class="ghost" id="menuBtn" type="button">Back to menu</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
