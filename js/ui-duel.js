@@ -101,12 +101,12 @@ function handleZone(side, kind, idx) {
   }
 
   if (app.sel?.type === 'hand' && app.sel.action === 'special') {
-    const ownMonster = side === 'you' && entry && !entry.faceDown
+    const ownMonster = side === 'you' && entry
       && (kind === 'monster' || (kind === 'emz' && entry.owner === 'you'));
     if (ownMonster) {
       app.sel.release = { kind, idx };
       sfx('select');
-      toast(`${entry.card.name} をリリース（DEF ${d.defOf('you', entry)}）`, 'gold');
+      toast(`${entry.faceDown ? 'セットモンスター' : entry.card.name} をリリース（DEF ${d.defOf('you', entry)}）`, 'gold');
       renderDuel();
       return;
     }

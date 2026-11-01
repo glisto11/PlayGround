@@ -618,6 +618,16 @@ ul { padding: 0; list-style: none; }
   cursor: crosshair;
 }
 .zone.selected { border-color: var(--gold); box-shadow: 0 0 22px -2px rgba(255, 207, 107, .7); }
+.zone.releaseable {
+  border-color: rgba(255, 207, 107, .75);
+  box-shadow: 0 0 18px -2px rgba(255, 207, 107, .5), inset 0 0 14px rgba(255, 207, 107, .1);
+  animation: releaseReady 1.2s ease-in-out infinite;
+  cursor: pointer;
+}
+.zone.release-picked {
+  border-color: #ff7a45;
+  box-shadow: 0 0 22px -2px rgba(255, 122, 69, .8), inset 0 0 16px rgba(255, 122, 69, .16);
+}
 .zone.hoverable:hover { border-color: rgba(150, 220, 255, .4); }
 
 /* field spell slot is slightly different */
@@ -1101,6 +1111,7 @@ ul { padding: 0; list-style: none; }
 @keyframes btnSheen { 0%, 55% { left: -35%; } 80%, 100% { left: 135%; } }
 @keyframes targetPulse { 0%, 100% { box-shadow: 0 0 0 1px rgba(255,92,108,.7), 0 0 16px -2px rgba(255,92,108,.55); } 50% { box-shadow: 0 0 0 2px rgba(255,92,108,.9), 0 0 30px 0 rgba(255,92,108,.75); } }
 @keyframes zoneReady { 0%, 100% { box-shadow: 0 0 12px -3px rgba(77,227,255,.5), inset 0 0 12px rgba(77,227,255,.08); } 50% { box-shadow: 0 0 24px 0 rgba(77,227,255,.7), inset 0 0 22px rgba(77,227,255,.18); } }
+@keyframes releaseReady { 0%, 100% { box-shadow: 0 0 12px -3px rgba(255,207,107,.45), inset 0 0 12px rgba(255,207,107,.08); } 50% { box-shadow: 0 0 24px 0 rgba(255,207,107,.7), inset 0 0 22px rgba(255,207,107,.16); } }
 @keyframes rowFlash { 0% { background: rgba(77, 227, 255, .16); } 100% { background: transparent; } }
 @keyframes logIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
