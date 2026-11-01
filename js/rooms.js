@@ -23,11 +23,10 @@ export const profile = {
   room: null,
 };
 
-export const online = { count: 128, rooms: [], myRoom: null, selectedRoomId: null, joinedMyRoom: true };
+export const online = { count: 1, rooms: [], myRoom: null, selectedRoomId: null, joinedMyRoom: true };
 
 let listeners = new Set();
 let tickTimer = null;
-let tickNo = 0;
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const hash = str => {
@@ -60,28 +59,6 @@ function makeHost(name) {
     color: avatarColor(name),
     ping: 8 + Math.floor(Math.random() * 74),
     deckId: pick(Object.keys(DECKS)),
-  };
-}
-
-function randomRoom(i) {
-  const name = pick(NAMES);
-  const host = makeHost(name);
-  const statusRoll = Math.random();
-  const players = statusRoll > 0.62 ? 2 : 1;
-  const status = statusRoll > 0.85 ? 'dueling' : statusRoll > 0.62 ? 'full' : 'open';
-  return {
-    id: `r${Date.now().toString(36)}${i}${Math.floor(Math.random() * 999)}`,
-    code: makeRoomCode(),
-    host,
-    mode: pick(['RANKED', 'CASUAL', 'RANKED', 'EX ONLY', 'NO IMAGE']),
-    lp: pick([8000, 8000, 8000, 6000, 4000]),
-    zones: 24,
-    players,
-    max: 2,
-    status,
-    mine: false,
-    deckId: host.deckId,
-    note: pick(['24ゾーン / LP0勝利', '画像なし / テキストカード', 'EXゾーン解放', '伏せ罠あり']),
   };
 }
 
@@ -159,7 +136,8 @@ function buildMyRoom() {
 
 export function emit() {
   online.myRoom = buildMyRoom();
-  online.rooms = [online.myRoom, ...online.roomPool];
+  online.rooms = [];
+  online.count = online.myRoom.players;
   for (const fn of listeners) fn();
 }
 
@@ -171,9 +149,8 @@ export function subscribe(fn) {
 export function initRooms() {
   loadProfile();
   online.myRoom = buildMyRoom();
-  online.roomPool = Array.from({ length: 8 }, (_, i) => randomRoom(i));
-  online.rooms = [online.myRoom, ...online.roomPool];
-  online.count = 110 + Math.floor(Math.random() * 90);
+  online.rooms = [];
+  online.count = online.myRoom.players;
   emit();
 
   if (!tickTimer) {
@@ -186,39 +163,11 @@ export function initRooms() {
 }
 
 function tick() {
-  tickNo++;
-  online.count = Math.max(60, Math.min(260, online.count + Math.floor(Math.random() * 13) - 6));
-
-  for (const room of online.roomPool) {
-    if (room.joined) continue;
-    if (Math.random() < 0.34) room.host.ping = Math.max(6, Math.min(120, room.host.ping + Math.floor(Math.random() * 11) - 5));
-    if (Math.random() < 0.18) {
-      const roll = Math.random();
-      if (roll < 0.4 && room.players === 1) { room.players = 2; room.status = 'full'; }
-      else if (roll < 0.7 && room.players === 2) { room.players = 1; room.status = 'open'; }
-      else if (roll < 0.85 && room.status === 'full') room.status = 'dueling';
-      else { room.players = 1; room.status = 'open'; }
-    }
+  const my = online.myRoom;
+  if (!my?.challenger && Math.random() < 0.12) {
+    const name = pick(NAMES);
+    online.myRoom = { ...my, challenger: makeHost(name) };
   }
-
-  if (tickNo % 3 === 0) {
-    const open = online.roomPool
-      .map((room, i) => ({ room, i }))
-      .filter(x => !x.room.joined && !x.room.mine);
-    if (open.length) {
-      const pickOne = open[Math.floor(Math.random() * open.length)];
-      online.roomPool[pickOne.i] = randomRoom(pickOne.i);
-    }
-  }
-
-  if (tickNo % 2 === 0) {
-    const my = online.myRoom;
-    if (!my?.challenger && Math.random() < 0.12) {
-      const name = pick(NAMES);
-      online.myRoom = { ...my, challenger: makeHost(name) };
-    }
-  }
-
   emit();
 }
 
