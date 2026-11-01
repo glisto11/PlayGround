@@ -228,10 +228,10 @@ export const DECKS = {
     id: 'flame', name: '蒼焔の章', short: '蒼焔', accent: '#ff7a45',
     desc: '高火力ドラゴンとバーンで押し切る。攻め切るための赤いデッキ。',
     main: {
-      dragonia: 2, ignis: 3, luna: 2, guardian: 2, fenrir: 2, levia: 2, nox: 2,
-      seraph: 1, valkyrie: 3, assassin: 2, crow: 2, vd11: 1, genbu: 1,
+      dragonia: 2, ignis: 3, luna: 1, guardian: 1, fenrir: 2, levia: 2, nox: 2,
+      valkyrie: 3, assassin: 2, crow: 2, vd11: 3, genbu: 3,
       breath: 3, guidance: 2, wave: 1, scorched: 2, thunder: 2, greed: 1,
-      blast: 2, pit: 1, counter: 1,
+      blast: 2, counter: 1,
     },
     extra: ['ex_arcadia', 'ex_gigant', 'ex_hades'],
   },
