@@ -328,19 +328,17 @@ function renderRoomDetail(room) {
         <div class="room-deck-pick" id="roomDeckPick">${deckOpts}</div>
         <div class="room-actions">
           <button class="primary-btn wide" id="startRoomDuel">${startLabel}</button>
-          <button class="secondary-btn wide" id="roomSoloBtn">ソロ練習（VS CPU）</button>
           ${isMine ? '' : '<button class="secondary-btn wide" id="leaveRoomBtn">ルームを退出</button>'}
         </div>
         <p class="tiny" style="padding:10px 18px 0">${isMine
-          ? '開始すると挑戦者が入室し、そのままデュエルが始まります。'
-          : 'デュエル開始でホストとの対戦が始まります。'}</p>
+          ? 'ルームマッチはオンライン専用です。開始すると挑戦者が入室し、そのままデュエルが始まります。'
+          : 'ルームマッチはオンライン専用です。デュエル開始でホストとの対戦が始まります。'}</p>
       </aside>
     </div>
   `;
 
   const startBtn = $('startRoomDuel');
   startBtn.addEventListener('click', () => startFromRoom(room));
-  $('roomSoloBtn').addEventListener('click', () => startSolo());
   $('leaveRoomBtn')?.addEventListener('click', () => {
     leaveOtherRoom();
     toast('ルームを退出しました', 'good');
