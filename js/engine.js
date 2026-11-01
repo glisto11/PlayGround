@@ -19,7 +19,7 @@ export const ZONE_MAP = {
 };
 
 export class Duel {
-  constructor({ playerName = 'YOU', oppName = 'OPPONENT', deckId = 'flame', oppDeckId = 'abyss', lp = 8000, mode = 'solo', first = null } = {}) {
+  constructor({ playerName = 'YOU', oppName = 'OPPONENT', deckId = 'flame', oppDeckId = 'abyss', lp = 8000, mode = 'online', first = null } = {}) {
     this.mode = mode;
     this.names = { you: playerName, opp: oppName };
     this.deckIds = { you: deckId, opp: oppDeckId };

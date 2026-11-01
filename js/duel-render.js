@@ -9,7 +9,7 @@ import {
 import { sfx } from './fx.js';
 
 /* ---------------- start ---------------- */
-export function startDuel({ oppName, oppDeckId, modeLabel = 'SOLO', roomCode = 'SOLO', lp = 8000 }) {
+export function startDuel({ oppName, oppDeckId, modeLabel = 'ONLINE', roomCode = '----', lp = 8000 }) {
   const deckId = DECKS[profile.deckId] ? profile.deckId : 'flame';
   const duel = new Duel({
     playerName: profile.name,
@@ -30,7 +30,7 @@ export function startDuel({ oppName, oppDeckId, modeLabel = 'SOLO', roomCode = '
 
   showScreen('duel');
   $('duelModeLabel').textContent = modeLabel;
-  $('duelRoomLabel').textContent = roomCode === 'SOLO' ? 'SOLO TRAINING' : `ROOM ${roomCode}`;
+  $('duelRoomLabel').textContent = `ROOM ${roomCode}`;
   $('turnBanner').hidden = true;
 
   renderDuel();
@@ -75,7 +75,7 @@ function renderNames(d) {
   $('youName').textContent = d.names.you;
   $('youTag').textContent = 'CHALLENGER';
   $('oppName').textContent = d.names.opp;
-  $('oppTag').textContent = d.mode === 'SOLO' ? 'SOLO CPU' : 'ONLINE DUELIST';
+  $('oppTag').textContent = 'ONLINE DUELIST';
   const ya = $('youAvatar');
   ya.textContent = initials(d.names.you);
   ya.style.background = `linear-gradient(140deg, ${avatarColor(d.names.you)}, #6c8dff)`;

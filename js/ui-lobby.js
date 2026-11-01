@@ -11,13 +11,9 @@ import {
 import { startDuel } from './ui-duel.js';
 import { sfx } from './fx.js';
 
-const CPU_NAMES = ['CPU / アストラ', 'CPU / ノクターン', 'CPU / ヴェルム', 'CPU / セラ', 'CPU / ゼロ', 'CPU / オルガ'];
-const CPU_DECKS = ['flame', 'abyss', 'gear'];
-
 export function initLobby() {
   app.onExitDuel = showLobby;
 
-  $('soloBtn').addEventListener('click', () => startSolo());
   $('myRoomBtn').addEventListener('click', () => openRoomDetail('mine'));
   $('enterRoomBtn').addEventListener('click', () => openRoomDetail('mine'));
   $('roomBackBtn').addEventListener('click', () => showLobby());
@@ -123,7 +119,7 @@ function renderRecord() {
     <div class="record-item loss"><b>${profile.losses}</b><span>LOSSES</span></div>
     <div class="record-item rate"><b>${total ? rate + '%' : '—'}</b><span>WIN RATE</span></div>
   `;
-  $('recordSub').textContent = total ? `${total} DUELS` : 'SOLO + ONLINE';
+  $('recordSub').textContent = total ? `${total} DUELS` : 'ONLINE';
 }
 
 /* ---------------- decks ---------------- */
@@ -389,18 +385,6 @@ function startFromRoom(room) {
     modeLabel: room.mine ? 'MY ROOM' : 'ONLINE ROOM',
     roomCode: room.code,
     lp: room.lp || 8000,
-  });
-}
-
-export function startSolo() {
-  const oppName = CPU_NAMES[Math.floor(Math.random() * CPU_NAMES.length)];
-  const oppDeckId = CPU_DECKS[Math.floor(Math.random() * CPU_DECKS.length)];
-  startDuel({
-    oppName,
-    oppDeckId,
-    modeLabel: 'SOLO',
-    roomCode: 'SOLO',
-    lp: 8000,
   });
 }
 
