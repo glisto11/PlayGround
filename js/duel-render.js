@@ -153,7 +153,7 @@ function zoneState(side, kind, idx, entry) {
     else selected = side === 'you' && app.sel.kind === kind && app.sel.idx === idx;
   }
   if (app.sel?.type === 'hand' && app.sel.action === 'special') {
-    const ownMonster = side === 'you' && entry && !entry.faceDown
+    const ownMonster = side === 'you' && entry
       && (kind === 'monster' || (kind === 'emz' && entry.owner === 'you'));
     const picked = app.sel.release
       && app.sel.release.kind === kind && app.sel.release.idx === idx;
@@ -297,7 +297,7 @@ function renderTray(d) {
       const releaseEntry = rel ? d.entryAt('you', rel.kind, rel.idx) : null;
       const label = rel ? '空きモンスターゾーンを選択' : 'リリースする自分のモンスターを選択';
       const note = releaseEntry
-        ? `リリース：${esc(releaseEntry.card.name)}（DEF ${d.defOf('you', releaseEntry)}）`
+        ? `リリース：${esc(releaseEntry.faceDown ? 'セットモンスター' : releaseEntry.card.name)}（DEF ${d.defOf('you', releaseEntry)}）`
         : 'モンスター1体をリリース';
       tray.innerHTML = `${chipHTML(c)}<span class="tray-hint"><i></i>${label}</span>
         ${btn('キャンセル', 'cancel')}<span class="tray-spacer"></span><span class="tray-turn">${note}</span>`;
