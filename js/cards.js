@@ -223,14 +223,17 @@ export const CARDS = {
   },
 };
 
+/* Every deck must be exactly this many main-deck cards. */
+export const DECK_SIZE = 27;
+
 export const DECKS = {
   flame: {
     id: 'flame', name: '蒼焔の章', short: '蒼焔', accent: '#ff7a45',
     desc: '高火力ドラゴンとバーンで押し切る。攻め切るための赤いデッキ。',
     main: {
-      dragonia: 2, ignis: 3, luna: 1, guardian: 1, fenrir: 2, levia: 2, nox: 2,
-      valkyrie: 3, assassin: 2, crow: 2, vd11: 3, genbu: 3,
-      breath: 3, guidance: 2, wave: 1, scorched: 2, thunder: 2, greed: 1,
+      dragonia: 1, ignis: 2, luna: 1, guardian: 1, fenrir: 1, levia: 1, nox: 1,
+      valkyrie: 2, assassin: 1, crow: 1, vd11: 3, genbu: 3,
+      breath: 2, guidance: 1, wave: 1, scorched: 1, thunder: 1,
       blast: 2, counter: 1,
     },
     extra: ['ex_arcadia', 'ex_gigant', 'ex_hades'],
@@ -239,10 +242,10 @@ export const DECKS = {
     id: 'abyss', name: '深淵の章', short: '深淵', accent: '#b06bff',
     desc: '除去と回復で盤面を支配。罠と冥府騎士で相手の攻撃をいなす。',
     main: {
-      luna: 3, nox: 3, guardian: 3, fenrir: 2, seraph: 2, assassin: 3, hound: 2,
-      spirit: 2, dragonia: 1, levia: 2, genbu: 1,
-      guidance: 3, wave: 2, breath: 2, spring: 2, greed: 2,
-      pit: 2, barrier: 2, counter: 1,
+      luna: 3, nox: 2, guardian: 2, fenrir: 1, seraph: 1, assassin: 2, hound: 1,
+      spirit: 1, levia: 1, genbu: 3,
+      guidance: 2, wave: 1, breath: 1, spring: 1, greed: 1,
+      pit: 2, barrier: 1, counter: 1,
     },
     extra: ['ex_hades', 'ex_arcadia', 'ex_gigant'],
   },
@@ -250,10 +253,10 @@ export const DECKS = {
     id: 'gear', name: '機巧の章', short: '機巧', accent: '#4de3ff',
     desc: '低コストを並べてEX召喚。連続攻撃とドローで畳みかける。',
     main: {
-      crow: 3, valkyrie: 3, fenrir: 3, ignis: 3, guardian: 2, golem: 1, levia: 2,
-      dragonia: 1, imp: 3, hound: 2, vd11: 1,
-      scorched: 2, thunder: 3, breath: 2, guidance: 2, fortify: 2,
-      blast: 2, mirror: 1, counter: 2,
+      crow: 3, valkyrie: 1, fenrir: 1, ignis: 2, guardian: 1, golem: 1, levia: 1,
+      dragonia: 1, imp: 2, hound: 1, vd11: 3,
+      scorched: 1, thunder: 2, breath: 1, guidance: 1, fortify: 1,
+      blast: 2, mirror: 1, counter: 1,
     },
     extra: ['ex_gigant', 'ex_arcadia', 'ex_hades'],
   },
@@ -274,6 +277,10 @@ export function deckSize(deck) {
 export function makeDeck(deckId) {
   const deck = DECKS[deckId];
   if (!deck) throw new Error(`unknown deck: ${deckId}`);
+  const size = deckSize(deck);
+  if (size !== DECK_SIZE) {
+    throw new Error(`${deck.name} は ${DECK_SIZE} 枚ちょうどである必要があります（現在 ${size} 枚）`);
+  }
   const main = [];
   for (const [id, n] of Object.entries(deck.main)) {
     for (let i = 0; i < n; i++) main.push(createCard(id));
