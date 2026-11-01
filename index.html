@@ -38,13 +38,9 @@
     <section class="hero">
       <p class="eyebrow"><span class="eyebrow-dot"></span>AUTO CREATE ROOM / AUTO JOIN / 24 ZONES</p>
       <h1>相手のLPを<br><em>0</em>にしろ。</h1>
-      <p class="hero-sub">カード画像は0枚。フィールドは24ゾーン。起動した瞬間に自分のルームが立ち、あなたは必ずそこへ参加している。オンラインのルームリストから挑むもよし、ソロでCPUを相手にするもよし。</p>
+      <p class="hero-sub">カード画像は0枚。フィールドは24ゾーン。起動した瞬間に自分のルームが立ち、あなたは必ずそこへ参加している。オンラインのルームリストから対戦相手を探して、LPを0にしろ。</p>
       <div class="hero-actions">
-        <button class="primary-btn" id="soloBtn">
-          <span class="btn-glyph">⚔</span>
-          <span class="btn-lines"><b>ソロでデュエル</b><small>VS CPU / すぐ開始</small></span>
-        </button>
-        <button class="secondary-btn" id="myRoomBtn">
+        <button class="primary-btn" id="myRoomBtn">
           <span class="btn-glyph">◉</span>
           <span class="btn-lines"><b>自分のルームへ</b><small>起動時に自動参加済み</small></span>
         </button>
@@ -87,7 +83,7 @@
       <section class="panel">
         <div class="panel-head">
           <h2>戦績</h2>
-          <span class="muted" id="recordSub">SOLO + ONLINE</span>
+          <span class="muted" id="recordSub">ONLINE</span>
         </div>
         <div class="record" id="recordBody"></div>
       </section>
@@ -142,7 +138,7 @@
 <section id="duelScreen" class="screen duel-screen">
   <header class="duel-top">
     <button class="icon-btn" id="leaveDuelBtn" aria-label="デュエルから退出">←</button>
-    <div class="duel-brand">DUEL<span>24</span><small id="duelModeLabel">SOLO</small></div>
+    <div class="duel-brand">DUEL<span>24</span><small id="duelModeLabel">ONLINE</small></div>
     <div class="turn-pill" id="turnPill"><i></i><span>YOUR TURN</span><b id="turnNo">T1</b></div>
     <div class="duel-room-label" id="duelRoomLabel">ROOM —</div>
     <div class="duel-top-actions">

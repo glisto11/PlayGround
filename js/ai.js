@@ -1,4 +1,4 @@
-/* Simple heuristic CPU opponent. Returns one action per call. */
+/* Simple heuristic duel opponent. Returns one action per call. */
 
 const other = s => (s === 'you' ? 'opp' : 'you');
 
