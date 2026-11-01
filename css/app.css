@@ -363,6 +363,17 @@ ul { padding: 0; list-style: none; }
   border-bottom: 1px solid var(--line);
 }
 .room-list { padding: 4px 8px 10px; }
+.room-empty {
+  margin: 6px 8px 10px;
+  padding: 26px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 13px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.room-empty b { display: block; color: var(--text); font-size: 13px; margin-bottom: 4px; }
 .room-row {
   position: relative;
   padding: 11px 12px;

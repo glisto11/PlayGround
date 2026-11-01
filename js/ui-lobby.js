@@ -180,6 +180,13 @@ function renderRooms() {
   const list = $('roomList');
   if (!list) return;
   $('roomCount').textContent = online.rooms.length;
+  if (!online.rooms.length) {
+    list.innerHTML = `<div class="room-empty">
+      <b>参加できるオンラインルームはありません</b>
+      <span>自分のルームコードを共有して、挑戦者を待ちましょう。</span>
+    </div>`;
+    return;
+  }
   const fresh = [];
   list.innerHTML = online.rooms.map(room => {
     const isNew = !app.seenRooms.has(room.id);
